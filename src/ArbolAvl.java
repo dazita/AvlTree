@@ -1,0 +1,290 @@
+import java.util.ArrayList;
+import java.util.Comparator;
+
+public class ArbolAvl<T> {
+
+	NodoAvl<T> raiz;
+    Comparator<T> comparator;
+
+	public ArbolAvl() {
+		raiz = null;
+	}
+
+	public NodoAvl<T> raizArbol() {
+		return raiz;
+	}
+
+	public void insertar(T value) throws Exception {
+		Logical h = new Logical(false);
+		raiz = insertarAvl(raiz, value, h);
+	}
+
+	private NodoAvl<T> insertarAvl(NodoAvl<T> raiz, T value, Logical h) throws Exception {
+		NodoAvl<T> n1;
+
+		if (raiz == null) {
+			raiz = new NodoAvl<T>(value);
+			h.setLogical(true);
+		} else if (comparator.compare(value, raiz.valorNodo())<0) {
+			NodoAvl<T> iz;
+			iz = insertarAvl((NodoAvl<T>) raiz.subarbolIzdo(), value, h);
+			raiz.ramaIzdo(iz);// ***************************************************
+			// regresa por los nodos del camino de busqueda
+			if (h.booleanValue()) {
+				// decrementa el fe por aumento de la rama izquierda
+				switch (raiz.fe) {
+				case 1:
+					raiz.fe = 0;
+					h.setLogical(false);
+					break;
+				case 0:
+					raiz.fe = -1;
+					break;
+				case -1: // aplicar rotacion a la izquierda
+					n1 = (NodoAvl<T>) raiz.subarbolIzdo();
+					if (n1.fe == -1)
+						raiz = rotacionII(raiz, n1);
+					else
+						raiz = rotacionDI(raiz, n1);
+					h.setLogical(false);
+				}
+			}
+		} else if (comparator.compare(value, raiz.valorNodo())>0) {
+			NodoAvl<T> dr;
+			dr = insertarAvl((NodoAvl<T>) raiz.subarbolDcho(), value, h);
+			raiz.ramaDcho(dr);// **********************************************************
+			// regresa por los nodos del camino de busqueda
+			if (h.booleanValue()) {
+				// decrementa el fe por aumento de la rama izquierda
+				switch (raiz.fe) {
+				case 1: // aplicar rotacion a la derecha
+					n1 = (NodoAvl<T>) raiz.subarbolDcho();
+					if (n1.fe == +1)
+						raiz = rotacionDD(raiz, n1);
+					else
+						raiz = rotacionID(raiz, n1);
+					h.setLogical(false);
+					break;
+				case 0:
+					raiz.fe = +1;
+					break;
+				case -1:
+					raiz.fe = 0;
+					h.setLogical(false);
+				}
+			}
+		} else
+			throw new Exception("No puede haber claves repetidas");
+		return raiz;
+	}
+    
+	private NodoAvl<T> rotacionII(NodoAvl<T> n, NodoAvl<T> n1) {
+		n.ramaIzdo(n1.subarbolDcho());
+		n1.ramaDcho(n);
+		// actualización de los factores de equilibrio
+		if (n1.fe == -1) // se cumple en la inserción
+		{
+			n.fe = 0;
+			n1.fe = 0;
+		} else {
+			n.fe = -1;
+			n1.fe = 1;
+		}
+		return n1;
+	}
+
+	private NodoAvl<T> rotacionDD(NodoAvl<T> n, NodoAvl<T> n1) {
+		n.ramaDcho(n1.subarbolIzdo());
+		n1.ramaIzdo(n);
+		// actualización de los factores de equilibrio
+		if (n1.fe == +1) // se cumple en la inserción
+		{
+			n.fe = 0;
+			n1.fe = 0;
+		} else {
+			n.fe = +1;
+			n1.fe = -1;
+		}
+		return n1;
+	}
+
+	private NodoAvl<T> rotacionDI(NodoAvl<T> n, NodoAvl<T> n1) {
+		NodoAvl<T> n2;
+
+		n2 = (NodoAvl<T>) n1.subarbolDcho();
+		n.ramaIzdo(n2.subarbolDcho());
+		n2.ramaDcho(n);
+		n1.ramaDcho(n2.subarbolIzdo());
+		n2.ramaIzdo(n1);
+		// actualización de los factores de equilibrio
+		if (n2.fe == +1)
+			n1.fe = -1;
+		else
+			n1.fe = 0;
+		if (n2.fe == -1)
+			n.fe = 1;
+		else
+			n.fe = 0;
+		n2.fe = 0;
+		return n2;
+	}
+
+	private NodoAvl<T> rotacionID(NodoAvl<T> n, NodoAvl<T> n1) {
+		NodoAvl<T> n2;
+
+		n2 = (NodoAvl<T>) n1.subarbolIzdo();
+		n.ramaDcho(n2.subarbolIzdo());
+		n2.ramaIzdo(n);
+		n1.ramaIzdo(n2.subarbolDcho());
+		n2.ramaDcho(n1);
+		// actualización de los factores de equilibrio
+		if (n2.fe == +1)
+			n.fe = -1;
+		else
+			n.fe = 0;
+		if (n2.fe == -1)
+			n1.fe = 1;
+		else
+			n1.fe = 0;
+		n2.fe = 0;
+		return n2;
+	}
+
+//Borrado de un nodo en árbol AVL
+
+	public void eliminar(T value) throws Exception {
+		Logical flag = new Logical(false);
+		raiz = borrarAvl(raiz, value, flag);
+	}
+
+	private NodoAvl<T> borrarAvl(NodoAvl<T> r, T value, Logical cambiaAltura) throws Exception {
+		if (r == null) {
+			throw new Exception(" Nodo no encontrado ");
+		} else if (comparator.compare(value, r.valorNodo())<0) {
+			NodoAvl<T> iz;
+			iz = borrarAvl((NodoAvl<T>) r.subarbolIzdo(), value, cambiaAltura);
+			r.ramaIzdo(iz);
+			if (cambiaAltura.booleanValue())
+				r = equilibrar1(r, cambiaAltura);
+		} else if (comparator.compare(value, r.valorNodo())>0) {
+			NodoAvl<T> dr;
+			dr = borrarAvl((NodoAvl<T>) r.subarbolDcho(), value, cambiaAltura);
+			r.ramaDcho(dr);
+			if (cambiaAltura.booleanValue())
+				r = equilibrar2(r, cambiaAltura);
+		} else // Nodo encontrado
+		{
+			NodoAvl<T> q;
+			q = r; // nodo a quitar del árbol
+			if (q.subarbolIzdo() == null) {
+				r = (NodoAvl<T>) q.subarbolDcho();
+				cambiaAltura.setLogical(true);
+			} else if (q.subarbolDcho() == null) {
+				r = (NodoAvl<T>) q.subarbolIzdo();
+				cambiaAltura.setLogical(true);
+			} else { // tiene rama izquierda y derecha
+				NodoAvl<T> iz;
+				iz = reemplazar(r, (NodoAvl<T>) r.subarbolIzdo(), cambiaAltura);
+				r.ramaIzdo(iz);
+				if (cambiaAltura.booleanValue())
+					r = equilibrar1(r, cambiaAltura);
+			}
+			q = null;
+		}
+		return r;
+	}
+
+	private NodoAvl<T> reemplazar(NodoAvl<T> n, NodoAvl<T> act, Logical cambiaAltura) {
+		if (act.subarbolDcho() != null) {
+			NodoAvl<T> d;
+			d = reemplazar(n, (NodoAvl<T>) act.subarbolDcho(), cambiaAltura);
+			act.ramaDcho(d);
+			if (cambiaAltura.booleanValue())
+				act = equilibrar2(act, cambiaAltura);
+		} else {
+			n.nuevoValor(act.valorNodo());
+			n = act;
+			act = (NodoAvl<T>) act.subarbolIzdo();
+			n = null;
+			cambiaAltura.setLogical(true);
+		}
+		return act;
+	}
+
+	private NodoAvl<T> equilibrar1(NodoAvl<T> n, Logical cambiaAltura) {
+		NodoAvl<T> n1;
+		switch (n.fe) {
+		case -1:
+			n.fe = 0;
+			break;
+		case 0:
+			n.fe = 1;
+			cambiaAltura.setLogical(false);
+			break;
+		case +1: // se aplicar un tipo de rotación derecha
+			n1 = (NodoAvl<T>) n.subarbolDcho();
+			if (n1.fe >= 0) {
+				if (n1.fe == 0) // la altura no vuelve a disminuir
+					cambiaAltura.setLogical(false);
+				n = rotacionDD(n, n1);
+			} else
+				n = rotacionID(n, n1);
+			break;
+		}
+		return n;
+	}
+
+	private NodoAvl<T> equilibrar2(NodoAvl<T> n, Logical cambiaAltura) {
+		NodoAvl<T> n1;
+
+		switch (n.fe) {
+		case -1: // Se aplica un tipo de rotación izquierda
+			n1 = (NodoAvl<T>) n.subarbolIzdo();
+			if (n1.fe <= 0) {
+				if (n1.fe == 0)
+					cambiaAltura.setLogical(false);
+				n = rotacionII(n, n1);
+			} else
+				n = rotacionDI(n, n1);
+			break;
+		case 0:
+			n.fe = -1;
+			cambiaAltura.setLogical(false);
+			break;
+		case +1:
+			n.fe = 0;
+			break;
+		}
+
+		return n;
+	}
+
+    public ArrayList<T> showInOrder(){
+        ArrayList<T> list = new ArrayList<>();
+        inOrden(raiz, list);
+        return list;
+    }
+
+    public ArrayList<T> showPreOrder(){
+        ArrayList<T> list = new ArrayList<>();
+        preOrden(raiz, list);
+        return list;
+    }
+
+	public void inOrden(NodoAvl<T> node, ArrayList<T> list){
+		if (node != null) {
+			inOrden(node.subarbolIzdo(), list);
+			list.add(node.valorNodo());
+			inOrden(node.subarbolDcho(), list);
+		}
+	}
+	
+	public void preOrden(NodoAvl<T> node, ArrayList<T> list){
+		if (node != null) {
+			list.add(node.valorNodo());
+			preOrden(node.subarbolIzdo(), list);
+			preOrden(node.subarbolDcho(), list);
+		}
+	}
+	
+}
