@@ -1,32 +1,16 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-package arbolesavl;
-
-/**
- *
- * @author HOYOSPI
- */
 public class Logical {
-	private boolean v;
 
-	public Logical(boolean f) {
-		v = f;
+	private boolean value;
+
+	public Logical(boolean value) {
+		this.value = value;
 	}
 
-	/**
-	 * @return the v
-	 */
-	public boolean booleanValue() {
-		return v;
+	public boolean getValue() {
+		return value;
 	}
 
-	/**
-	 * @param v the v to set
-	 */
-	public void setLogical(boolean v) {
-		this.v = v;
+	public void setValue(boolean value) {
+		this.value = value;
 	}
 }
