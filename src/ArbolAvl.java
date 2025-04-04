@@ -6,83 +6,89 @@ public class ArbolAvl<T> {
 	NodoAvl<T> raiz;
     Comparator<T> comparator;
 
-	public ArbolAvl() {
+	public ArbolAvl(Comparator<T> comparator) {
 		raiz = null;
+		this.comparator = comparator;
 	}
 
 	public NodoAvl<T> raizArbol() {
 		return raiz;
 	}
 
-	public void insertar(T value) throws Exception {
+	public boolean insertar(T value) throws Exception {
 		Logical h = new Logical(false);
-		raiz = insertarAvl(raiz, value, h);
+		NodoAvl<T> newNode = insertarAvl(raiz, value, h);
+		if (newNode == null) {
+			return false;
+		}else{
+			raiz=newNode;
+			return true;
+		}
 	}
 
-	private NodoAvl<T> insertarAvl(NodoAvl<T> raiz, T value, Logical h) throws Exception {
+	private NodoAvl<T> insertarAvl(NodoAvl<T> current, T value, Logical h) throws Exception {
 		NodoAvl<T> n1;
 
-		if (raiz == null) {
-			raiz = new NodoAvl<T>(value);
+		if (current == null) {
+			current = new NodoAvl<T>(value);
 			h.setLogical(true);
-		} else if (comparator.compare(value, raiz.valorNodo())<0) {
+		} else if (comparator.compare(value, current.valorNodo()) < 0) {
 			NodoAvl<T> iz;
-			iz = insertarAvl((NodoAvl<T>) raiz.subarbolIzdo(), value, h);
-			raiz.ramaIzdo(iz);// ***************************************************
-			// regresa por los nodos del camino de busqueda
+			iz = insertarAvl((NodoAvl<T>) current.subarbolIzdo(), value, h);
+			if(iz == null)return null;
+			current.ramaIzdo(iz);
 			if (h.booleanValue()) {
-				// decrementa el fe por aumento de la rama izquierda
-				switch (raiz.fe) {
+				switch (current.fe) {
 				case 1:
-					raiz.fe = 0;
+					current.fe = 0;
 					h.setLogical(false);
 					break;
 				case 0:
-					raiz.fe = -1;
-					break;
-				case -1: // aplicar rotacion a la izquierda
-					n1 = (NodoAvl<T>) raiz.subarbolIzdo();
-					if (n1.fe == -1)
-						raiz = rotacionII(raiz, n1);
-					else
-						raiz = rotacionDI(raiz, n1);
-					h.setLogical(false);
-				}
-			}
-		} else if (comparator.compare(value, raiz.valorNodo())>0) {
-			NodoAvl<T> dr;
-			dr = insertarAvl((NodoAvl<T>) raiz.subarbolDcho(), value, h);
-			raiz.ramaDcho(dr);// **********************************************************
-			// regresa por los nodos del camino de busqueda
-			if (h.booleanValue()) {
-				// decrementa el fe por aumento de la rama izquierda
-				switch (raiz.fe) {
-				case 1: // aplicar rotacion a la derecha
-					n1 = (NodoAvl<T>) raiz.subarbolDcho();
-					if (n1.fe == +1)
-						raiz = rotacionDD(raiz, n1);
-					else
-						raiz = rotacionID(raiz, n1);
-					h.setLogical(false);
-					break;
-				case 0:
-					raiz.fe = +1;
+					current.fe = -1;
 					break;
 				case -1:
-					raiz.fe = 0;
+					n1 = (NodoAvl<T>) current.subarbolIzdo();
+					if (n1.fe == -1)
+						current = rotacionII(current, n1);
+					else
+						current = rotacionDI(current, n1);
 					h.setLogical(false);
 				}
 			}
-		} else
-			throw new Exception("No puede haber claves repetidas");
-		return raiz;
+		} else if (comparator.compare(value, current.valorNodo()) > 0) {
+			NodoAvl<T> dr;
+			dr = insertarAvl((NodoAvl<T>) current.subarbolDcho(), value, h);
+			if(dr == null)return null;
+			current.ramaDcho(dr);
+			if (h.booleanValue()) {
+				switch (current.fe) {
+				case 1:
+					n1 = (NodoAvl<T>) current.subarbolDcho();
+					if (n1.fe == +1)
+						current = rotacionDD(current, n1);
+					else
+						current = rotacionID(current, n1);
+					h.setLogical(false);
+					break;
+				case 0:
+					current.fe = +1;
+					break;
+				case -1:
+					current.fe = 0;
+					h.setLogical(false);
+				}
+			}
+		} else if(comparator.compare(value, current.valorNodo()) == 0){
+			h.setLogical(false);
+			return null;
+		}
+		return current;
 	}
     
 	private NodoAvl<T> rotacionII(NodoAvl<T> n, NodoAvl<T> n1) {
 		n.ramaIzdo(n1.subarbolDcho());
 		n1.ramaDcho(n);
-		// actualización de los factores de equilibrio
-		if (n1.fe == -1) // se cumple en la inserción
+		if (n1.fe == -1)
 		{
 			n.fe = 0;
 			n1.fe = 0;
@@ -278,6 +284,10 @@ public class ArbolAvl<T> {
 			inOrden(node.subarbolDcho(), list);
 		}
 	}
+
+	public boolean isEmpty(){
+		return raiz == null;
+	}
 	
 	public void preOrden(NodoAvl<T> node, ArrayList<T> list){
 		if (node != null) {
@@ -286,5 +296,4 @@ public class ArbolAvl<T> {
 			preOrden(node.subarbolDcho(), list);
 		}
 	}
-	
 }

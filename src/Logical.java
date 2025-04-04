@@ -1,16 +1,18 @@
+
 public class Logical {
+	private boolean v;
 
-	private boolean value;
-
-	public Logical(boolean value) {
-		this.value = value;
+	public Logical(boolean f) {
+		v = f;
 	}
 
-	public boolean getValue() {
-		return value;
+	
+	public boolean booleanValue() {
+		return v;
 	}
 
-	public void setValue(boolean value) {
-		this.value = value;
+
+	public void setLogical(boolean v) {
+		this.v = v;
 	}
 }
